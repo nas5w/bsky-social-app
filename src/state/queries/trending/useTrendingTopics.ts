@@ -20,7 +20,7 @@ export function useTrendingTopics() {
     return preferences?.moderationPrefs?.mutedWords || []
   }, [preferences?.moderationPrefs])
 
-  return useQuery({
+  const query = useQuery({
     refetchOnWindowFocus: true,
     staleTime: STALE.MINUTES.THREE,
     queryKey: trendingTopicsQueryKey,
@@ -28,22 +28,31 @@ export function useTrendingTopics() {
       const {data} = await agent.api.app.bsky.unspecced.getTrendingTopics({
         limit: DEFAULT_LIMIT,
       })
-
-      const {topics, suggested} = data
-      return {
-        topics: topics.filter(t => {
-          return !hasMutedWord({
-            mutedWords,
-            text: t.topic + ' ' + t.displayName + ' ' + t.description,
-          })
-        }),
-        suggested: suggested.filter(t => {
-          return !hasMutedWord({
-            mutedWords,
-            text: t.topic + ' ' + t.displayName + ' ' + t.description,
-          })
-        }),
-      }
+      return data
     },
   })
+
+  if (!query.data) {
+    return query
+  }
+
+  const {topics, suggested} = query.data
+
+  return {
+    ...query,
+    data: {
+      topics: topics.filter(t => {
+        return !hasMutedWord({
+          mutedWords,
+          text: t.topic + ' ' + t.displayName + ' ' + t.description,
+        })
+      }),
+      suggested: suggested.filter(t => {
+        return !hasMutedWord({
+          mutedWords,
+          text: t.topic + ' ' + t.displayName + ' ' + t.description,
+        })
+      }),
+    },
+  }
 }
