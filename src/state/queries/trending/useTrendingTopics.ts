@@ -23,7 +23,8 @@ export function useTrendingTopics() {
   return useQuery({
     refetchOnWindowFocus: true,
     staleTime: STALE.MINUTES.THREE,
-    queryKey: trendingTopicsQueryKey,
+    queryKey: [trendingTopicsQueryKey, mutedWords],
+    enabled: !!preferences,
     async queryFn() {
       const {data} = await agent.api.app.bsky.unspecced.getTrendingTopics({
         limit: DEFAULT_LIMIT,
